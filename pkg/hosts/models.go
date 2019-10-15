@@ -7,10 +7,19 @@ import (
 
 // See: zabbix/frontends/php/include/defines.inc.php
 const (
-	ZbxFlagDiscoveryNormal = 1 << iota
-	ZbxFlagDiscoveryRule
-	ZbxFlagDiscoveryPrototype
-	ZbxFlagDiscoveryCreated
+	ZbxFlagDiscoveryNormal    = 0
+	ZbxFlagDiscoveryRule      = 1
+	ZbxFlagDiscoveryPrototype = 2
+	ZbxFlagDiscoveryCreated   = 4
+)
+
+// See: zabbix/frontends/php/include/defines.inc.php:310
+const (
+	HostStatusMonitored    = 0
+	HostStatusNotMonitored = 1
+	HostStatusTemplate     = 3
+	HostStatusProxyActive  = 5
+	HostStatusProxyPassive = 6
 )
 
 type Host struct {
@@ -65,4 +74,18 @@ type Host struct {
 	TLSSubject     string `json:"tls_subject" db:"tls_subject"`
 	TLSPSKIdentity string `json:"tls_psk_identity" db:"tls_psk_identity"`
 	TLSPSK         string `json:"tls_psk" db:"tls_psk"`
+}
+
+type Template Host
+
+type HostInterface struct {
+	InterfaceId int               `json:"interfaceid"`
+	DNS         string            `json:"dns"`
+	HostId      int               `json:"hostid"`
+	IP          string            `json:"ip"`
+	Main        zpg.ZabbixBoolean `json:"main"`
+	Port        string            `json:"port"`
+	Type        string            `json:"type"`
+	UseIP       zpg.ZabbixBoolean `json:"useip"`
+	Bulk        zpg.ZabbixBoolean `json:"bulk"`
 }

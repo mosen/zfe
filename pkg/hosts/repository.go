@@ -4,30 +4,33 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	db "github.com/mosen/zfe/pkg/database"
 )
 
 // This should roughly track the behaviour of frontends/php/include/classes/api/services/CHost.php
 
-type Repository interface {
-	Find(options ...func(*FindOptions) error) ([]Host, error)
+type HostsRepository interface {
+	Find(options ...func(*db.FindOptions) error) ([]Host, error)
 }
 
-type repository struct {
+type hostsRepository struct {
 	db *sqlx.DB
 }
 
-func NewRepository(conn *sqlx.DB) Repository {
-	return &repository{conn}
+func NewHostsRepository(conn *sqlx.DB) HostsRepository {
+	return &hostsRepository{conn}
 }
 
-func (r *repository) Find(options ...func(*FindOptions) error) ([]Host, error) {
+func (r *hostsRepository) Find(options ...func(*db.FindOptions) error) ([]Host, error) {
 	var err error
 	psql := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
 	// Zabbix Frontend filters by flags to exclude prototypes and rules(?)
-	stmt := psql.Select("*").From("hosts") //.Where(sq.Eq{"flags": []int{ZbxFlagDiscoveryNormal, ZbxFlagDiscoveryCreated}})
+	stmt := psql.Select("*").From("hosts").Where(
+		sq.Eq{"flags": []int{ZbxFlagDiscoveryNormal, ZbxFlagDiscoveryCreated}}).Where(
+		sq.NotEq{"status": HostStatusTemplate})
 
-	findOptions := &FindOptions{limit: 0}
+	findOptions := &db.FindOptions{Limit: 100}
 	for _, op := range options {
 		err := op(findOptions)
 		if err != nil {
@@ -35,7 +38,7 @@ func (r *repository) Find(options ...func(*FindOptions) error) ([]Host, error) {
 		}
 	}
 
-	// stmt = stmt.Limit(findOptions.limit)
+	stmt = stmt.Limit(findOptions.Limit)
 
 	query, args, err := stmt.ToSql()
 	if err != nil {
@@ -50,21 +53,45 @@ func (r *repository) Find(options ...func(*FindOptions) error) ([]Host, error) {
 	return hosts, nil
 }
 
-type FindOptions struct {
-	// Limit results returned to this number
-	limit uint64
-
-	// Include relationships specified by name
-	include []string
+type TemplatesRepository interface {
+	Find(options ...func(*db.FindOptions) error) ([]Template, error)
 }
 
-func Limit(count uint64) func(*FindOptions) error {
-	return func(opts *FindOptions) error {
-		if count > 0 {
-			opts.limit = count
-		} else {
-			opts.limit = 100
+type templatesRepository struct {
+	db *sqlx.DB
+}
+
+func NewTemplatesRepository(conn *sqlx.DB) TemplatesRepository {
+	return &templatesRepository{conn}
+}
+
+func (r *templatesRepository) Find(options ...func(*db.FindOptions) error) ([]Template, error) {
+	var err error
+	psql := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
+
+	// Zabbix Frontend filters by flags to exclude prototypes and rules(?)
+	stmt := psql.Select("*").From("hosts").Where(
+		sq.Eq{"status": HostStatusTemplate})
+
+	findOptions := &db.FindOptions{Limit: 100}
+	for _, op := range options {
+		err := op(findOptions)
+		if err != nil {
+			return nil, err
 		}
-		return nil
 	}
+
+	stmt = stmt.Limit(findOptions.Limit)
+
+	query, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	var templates []Template
+	if err = r.db.Select(&templates, query, args...); err != nil {
+		return nil, err
+	}
+
+	return templates, nil
 }

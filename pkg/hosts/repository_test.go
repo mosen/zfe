@@ -16,7 +16,7 @@ func TestNewRepository(t *testing.T) {
 		fmt.Println(err)
 	}()
 
-	repo := NewRepository(db)
+	repo := NewHostsRepository(db)
 	if repo == nil {
 		t.Failed()
 	}
@@ -32,7 +32,7 @@ func TestRepository_Find(t *testing.T) {
 		fmt.Println(err)
 	}()
 
-	repo := NewRepository(db)
+	repo := NewHostsRepository(db)
 
 	hosts, err := repo.Find()
 	if err != nil {
@@ -42,6 +42,6 @@ func TestRepository_Find(t *testing.T) {
 	if len(hosts) == 0 {
 		t.Fail()
 	} else {
-		t.Logf("Got %d Host(s) from Host Repository", len(hosts))
+		t.Logf("Got %d Host(s) from Host HostsRepository", len(hosts))
 	}
 }

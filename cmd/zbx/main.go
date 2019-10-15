@@ -31,12 +31,15 @@ func main() {
 		fmt.Errorf("Cannot open database connection: %s", err)
 	}
 
-	hostsRepo := hosts.NewRepository(db)
-	hostsSvc := hosts.NewService(hostsRepo)
-	_ = hosts.MakeHandler(hostsSvc, logger)
+	hostsRepo := hosts.NewHostsRepository(db)
+	hostsSvc := hosts.NewHostService(hostsRepo)
+	templatesRepo := hosts.NewTemplatesRepository(db)
+	templateSvc := hosts.NewTemplateService(templatesRepo)
+	hostsHandler := hosts.MakeHandler(hostsSvc, templateSvc, logger)
 
 	mux := http.NewServeMux()
-	mux.Handle("/hosts/v1/", hosts.MakeHandler(hostsSvc, logger))
+	mux.Handle("/hosts/v1/", hostsHandler)
+	mux.Handle("/templates/v1/", hostsHandler)
 
 	http.Handle("/", mux)
 

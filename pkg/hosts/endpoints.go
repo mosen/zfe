@@ -5,14 +5,26 @@ import (
 	"github.com/go-kit/kit/endpoint"
 )
 
-func makeIndexEndpoint(svc HostService) endpoint.Endpoint {
+func makeHostsIndexEndpoint(svc HostService) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		// req := request.(indexRequest)
 		hosts, err := svc.Find()
 		if err != nil {
-			return indexResponse{Errors: []string{err.Error()}}, nil
+			return hostsIndexResponse{Errors: []string{err.Error()}}, nil
 		}
 
-		return indexResponse{Data: hosts}, nil
+		return hostsIndexResponse{Data: hosts}, nil
+	}
+}
+
+func makeTemplatesIndexEndpoint(svc TemplateService) endpoint.Endpoint {
+	return func(_ context.Context, request interface{}) (interface{}, error) {
+		// req := request.(indexRequest)
+		templates, err := svc.Find()
+		if err != nil {
+			return templatesIndexResponse{Errors: []string{err.Error()}}, nil
+		}
+
+		return templatesIndexResponse{Data: templates}, nil
 	}
 }

@@ -11,14 +11,21 @@ import kitlog "github.com/go-kit/kit/log"
 import kittransport "github.com/go-kit/kit/transport"
 import kithttp "github.com/go-kit/kit/transport/http"
 
-func MakeHandler(svc HostService, logger kitlog.Logger) http.Handler {
+func MakeHandler(hostSvc HostService, templateSvc TemplateService, logger kitlog.Logger) http.Handler {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorHandler(kittransport.NewLogErrorHandler(logger)),
 		kithttp.ServerErrorEncoder(encodeError),
 	}
 
-	indexHandler := kithttp.NewServer(
-		makeIndexEndpoint(svc),
+	hostsIndexHandler := kithttp.NewServer(
+		makeHostsIndexEndpoint(hostSvc),
+		decodeIndexRequest,
+		encodeResponse,
+		opts...,
+	)
+
+	templatesIndexHandler := kithttp.NewServer(
+		makeTemplatesIndexEndpoint(templateSvc),
 		decodeIndexRequest,
 		encodeResponse,
 		opts...,
@@ -26,8 +33,8 @@ func MakeHandler(svc HostService, logger kitlog.Logger) http.Handler {
 
 	r := mux.NewRouter()
 
-	r.Handle("/hosts/v1/", indexHandler).Methods("GET")
-	// r.Handle("/hosts/v1/{id}", getHandler).Methods("GET")
+	r.Handle("/hosts/v1/", hostsIndexHandler).Methods("GET")
+	r.Handle("/templates/v1/", templatesIndexHandler).Methods("GET")
 
 	return r
 }
