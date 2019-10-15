@@ -11,7 +11,3 @@ type agent struct {
 func NewAgent() (ZabbixAgent, error) {
 	return &agent{}, nil
 }
-
-func GetActiveChecks() error {
-
-}

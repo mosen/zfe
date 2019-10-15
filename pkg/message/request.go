@@ -15,7 +15,7 @@ type HostRequest struct {
 
 func NewHostRequest(request string) *HostRequest {
 	hr := &HostRequest{Version: "4.0.0", Host: ""}
-	hr.Request.Request = request
+	hr.Request = &Request{Request: request}
 	return hr
 }
 

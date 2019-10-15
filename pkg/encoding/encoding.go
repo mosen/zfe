@@ -1,10 +1,11 @@
 package encoding
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
-	"go/types"
+	"fmt"
 )
 
 var HEADER = []byte{'Z', 'B', 'X', 'D', 0x01}
@@ -16,11 +17,24 @@ func Encode(data interface{}) ([]byte, error) {
 	}
 
 	bodyLength := uint64(len(body))
+	fmt.Println(bodyLength)
 	buf := bytes.NewBuffer(HEADER)
-	var bodyLengthBytes = make([]byte, binary.Size(types.Uint64))
-	binary.LittleEndian.PutUint64(bodyLengthBytes, bodyLength)
-	buf.Write(bodyLengthBytes)
+
+	lengthBytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(lengthBytes, bodyLength)
+
+	buf.Write(lengthBytes)
 	buf.Write(body)
 
 	return buf.Bytes(), nil
+}
+
+func DecodeNext(reader *bufio.Reader) ([]byte, error) {
+	headerAndLength := make([]byte, 8+len(HEADER))
+	if _, err := reader.Read(headerAndLength); err != nil {
+		return nil, err
+	}
+
+	fmt.Println(headerAndLength)
+	return nil, nil
 }
